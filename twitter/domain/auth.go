@@ -57,7 +57,33 @@ func (as *AuthService) Register(ctx context.Context, input twitter.RegisterInput
 		return twitter.AuthResponse{}, fmt.Errorf("error creating user: %v", err)
 	}
 
-	//return accessToken and user
+	return twitter.AuthResponse{
+		AccessToken: "a token",
+		User:        user,
+	}, nil
+}
+
+func (as *AuthService) Login(ctx context.Context, input twitter.LoginInput) (twitter.AuthResponse, error) {
+	input.Sanitize()
+
+	if err := input.Validate(); err != nil {
+		return twitter.AuthResponse{}, err
+	}
+
+	user, err := as.UserRepo.GetByEmail(ctx, input.Email)
+	if err != nil {
+		switch {
+		case errors.Is(err, twitter.ErrNotFound):
+			return twitter.AuthResponse{}, twitter.ErrBadCredentials
+		default:
+			return twitter.AuthResponse{}, err
+		}
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+		return twitter.AuthResponse{}, twitter.ErrBadCredentials
+	}
+
 	return twitter.AuthResponse{
 		AccessToken: "a token",
 		User:        user,
