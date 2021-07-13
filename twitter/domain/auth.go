@@ -23,7 +23,7 @@ func NewAuthService(ur twitter.UserRepo) *AuthService {
 func (as *AuthService) Register(ctx context.Context, input twitter.RegisterInput) (twitter.AuthResponse, error) {
 	input.Sanitize()
 
-	//if there is an error, return an empty response
+	//if there is an error, return an empty response alongside the error
 	if err := input.Validate(); err != nil {
 		return twitter.AuthResponse{}, err
 	}
